@@ -1,3 +1,10 @@
+# Pickle files
+*.pkl
+
+# JPEG image files
+*.jpg
+*.jpeg
+
 # Jupyter notebooks
 *.ipynb
 
