@@ -15,6 +15,7 @@ class RawImage:
     """
     A raw image, represented as an array of grayscale values.
     """
+
     width: int
     height: int
     data: np.ndarray
@@ -26,21 +27,29 @@ class RawImage:
 @dataclass
 class SVDImage:
     """SVD factorization of a RawImage."""
+
     width: int
     height: int
     u: np.ndarray
     s: np.ndarray
     v: np.ndarray
 
-    def __post_init__(self):
-        assert self.u.shape == (self.height, self.height)
-        assert self.s.shape == (self.height, self.width)
-        assert self.v.shape == (self.width, self.width)
-
     @property
     def data(self) -> np.ndarray:
         return self.u @ self.s @ self.v
-    
+
+    def keep_n_components(self, n: int) -> "SVDImage":
+        """
+        Return a new SVDImage with only the first n components.
+        """
+        if not 0 < n <= min(self.width, self.height):
+            raise ValueError(
+                f"n must be between 0 and {min(self.width, self.height)}, inclusive"
+            )
+        return SVDImage(
+            self.width, self.height, self.u[:, :n], self.s[:n, :n], self.v[:n, :]
+        )
+
     @classmethod
     def from_raw_image(cls, image: RawImage) -> "SVDImage":
         u, s_vector, v = la.svd(image.data)
@@ -49,7 +58,6 @@ class SVDImage:
         min_dim = min(image.height, image.width)
         s[:min_dim, :min_dim] = np.diag(s_vector)
         return cls(image.width, image.height, u, s, v)
-
 
 
 def import_image_from_file(path: str) -> RawImage:
@@ -73,11 +81,11 @@ def import_image_from_jpeg(path: str) -> RawImage:
     return RawImage(width, height, data)
 
 
-
 def export_image_to_file(image: RawImage, path: str):
     assert path.endswith(".pkl")
     with open(path, "wb") as fh:
         pickle.dump(image, fh)
+
 
 def random_gradient(width: int, height: int) -> RawImage:
     """
