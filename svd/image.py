@@ -7,6 +7,8 @@ import pickle
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.linalg as la
+
 
 @dataclass
 class RawImage:
@@ -19,7 +21,31 @@ class RawImage:
 
     def __post_init__(self):
         assert self.data.shape == (self.height, self.width)
+
+
+@dataclass
+class SVDImage:
+    """SVD factorization of a RawImage."""
+    width: int
+    height: int
+    u: np.ndarray
+    s: np.ndarray
+    v: np.ndarray
+
+    def __post_init__(self):
+        assert self.u.shape == (self.height, self.height)
+        assert self.s.shape == (self.height, self.width)
+        assert self.v.shape == (self.width, self.width)
+
+    @property
+    def data(self) -> np.ndarray:
+        return self.u @ self.s @ self.v
     
+    @classmethod
+    def from_raw_image(cls, image: RawImage) -> "SVDImage":
+        u, s, v = la.svd(image.data)
+        return cls(image.width, image.height, u, np.diag(s), v)
+
 
 def import_image_from_file(path: str) -> RawImage:
     assert path.endswith(".pkl")
