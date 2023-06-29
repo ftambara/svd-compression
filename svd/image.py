@@ -43,8 +43,13 @@ class SVDImage:
     
     @classmethod
     def from_raw_image(cls, image: RawImage) -> "SVDImage":
-        u, s, v = la.svd(image.data)
-        return cls(image.width, image.height, u, np.diag(s), v)
+        u, s_vector, v = la.svd(image.data)
+        # If matrix is rectangular, pad s with zeros
+        s = np.zeros((image.height, image.width))
+        min_dim = min(image.height, image.width)
+        s[:min_dim, :min_dim] = np.diag(s_vector)
+        return cls(image.width, image.height, u, s, v)
+
 
 
 def import_image_from_file(path: str) -> RawImage:
