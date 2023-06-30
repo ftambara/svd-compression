@@ -37,6 +37,15 @@ class SVDImage:
     @property
     def data(self) -> np.ndarray:
         return self.u @ self.s @ self.v
+    
+    def theoretical_compression_ratio(self) -> float:
+        """
+        Return the theoretical data compression ratio for this image.
+        """
+        full_size = self.width * self.height
+        compressed_size = self.u.size + self.s.size + self.v.size
+        return full_size / compressed_size
+
 
     def keep_n_components(self, n: int) -> "SVDImage":
         """
