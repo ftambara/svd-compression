@@ -39,7 +39,17 @@ class SVDImage:
         """
         Return the reconstructed image data.
         """
-        return self.u @ np.diag(self.s_vector) @ self.v
+        s_height = self.u.shape[1]
+        s_width = self.v.shape[0]
+        s = np.zeros((s_height, s_width))
+
+        # Fill in the diagonal of s
+        for i, s_i in enumerate(self.s_vector):
+            s[i, i] = s_i
+
+        # Reconstruct the image
+        return self.u @ s @ self.v
+
 
     def theoretical_compression_ratio(self) -> float:
         """
