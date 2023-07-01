@@ -31,21 +31,23 @@ class SVDImage:
     width: int
     height: int
     u: np.ndarray
-    s: np.ndarray
+    s_vector: np.ndarray
     v: np.ndarray
 
     @property
     def data(self) -> np.ndarray:
-        return self.u @ self.s @ self.v
-    
+        """
+        Return the reconstructed image data.
+        """
+        return self.u @ np.diag(self.s_vector) @ self.v
+
     def theoretical_compression_ratio(self) -> float:
         """
         Return the theoretical data compression ratio for this image.
         """
         full_size = self.width * self.height
-        compressed_size = self.u.size + self.s.size + self.v.size
+        compressed_size = self.u.size + self.s_vector.size + self.v.size
         return full_size / compressed_size
-
 
     def keep_n_components(self, n: int) -> "SVDImage":
         """
@@ -56,17 +58,13 @@ class SVDImage:
                 f"n must be between 0 and {min(self.width, self.height)}, inclusive"
             )
         return SVDImage(
-            self.width, self.height, self.u[:, :n], self.s[:n, :n], self.v[:n, :]
+            self.width, self.height, self.u[:, :n], self.s_vector[:n], self.v[:n, :]
         )
 
     @classmethod
     def from_raw_image(cls, image: RawImage) -> "SVDImage":
         u, s_vector, v = la.svd(image.data)
-        # If matrix is rectangular, pad s with zeros
-        s = np.zeros((image.height, image.width))
-        min_dim = min(image.height, image.width)
-        s[:min_dim, :min_dim] = np.diag(s_vector)
-        return cls(image.width, image.height, u, s, v)
+        return cls(image.width, image.height, u, s_vector, v)
 
 
 def import_image_from_file(path: str) -> RawImage:
